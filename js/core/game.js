@@ -1,41 +1,108 @@
-// js/core/game.js - Sistema Global, Vidas y Cambio de Niveles
+// js/core/game.js
+const Game = {
+    canvas: null,
+    ctx: null,
+    currentLevelIndex: 0,
+    levels: [],
+    currentLevel: null,
+    isRunning: false,
+    score: 0,
+    lives: 3,
 
-class Game {
-    constructor() {
-        this.score = 0;
+    init() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.levels = [Level1, Level2, Level3];
+        this.currentLevelIndex = 0;
+        this.currentLevel = this.levels[this.currentLevelIndex];
+        Player.init(this.canvas);
+        this.setupEvents();
+    },
+
+    setupEvents() {
+        window.addEventListener('keydown', (e) => Player.handleKeyDown(e));
+        window.addEventListener('keyup', (e) => Player.handleKeyUp(e));
+    },
+
+    start() {
+        if (this.isRunning) return;
+        this.isRunning = true;
         this.lives = 3;
-        this.currentLevel = 1;
-        this.gameState = "MENU"; // MENU, PLAYING, GAMEOVER, VICTORY
-    }
+        this.score = 0;
+        this.currentLevelIndex = 0;
+        this.loadLevel(this.currentLevelIndex);
+        this.loop();
+    },
 
-    // Sistema global de cambio de niveles
-    nextLevel() {
-        this.currentLevel++;
-        if (this.currentLevel > 3) {
-            this.gameState = "VICTORY";
-            console.log("¡Victoria global alcanzada!");
+    loadLevel(index) {
+        if (index < this.levels.length) {
+            this.currentLevelIndex = index;
+            this.currentLevel = this.levels[this.currentLevelIndex];
+            Player.resetPosition(this.currentLevel);
         } else {
-            console.log(`Avanzando al Nivel ${this.currentLevel}`);
+            this.victory();
         }
-    }
+    },
 
-    // Lógica de salud y vidas
     loseLife() {
         this.lives--;
-        console.log(`¡Has perdido una vida! Vidas restantes: ${this.lives}`);
+        this.updateHUD();
         if (this.lives <= 0) {
-            this.gameState = "GAMEOVER";
-            console.log("=== GAME OVER ===");
+            this.gameOver();
+        } else {
+            Player.resetPosition(this.currentLevel);
         }
-    }
+    },
 
-    resetGame() {
-        this.score = 0;
-        this.lives = 3;
-        this.currentLevel = 1;
-        this.gameState = "PLAYING";
-    }
-}
+    updateHUD() {
+        const livesDisplay = document.getElementById('lives-display');
+        if (livesDisplay) {
+            livesDisplay.textContent = '❤️'.repeat(Math.max(0, this.lives));
+        }
+    },
 
-// Exportamos la instancia global del juego
-const game = new Game();
+    nextLevel() {
+        this.currentLevelIndex++;
+        if (this.currentLevelIndex < this.levels.length) {
+            alert(`🎉 ¡Nivel superado! Pasando a: ${this.levels[this.currentLevelIndex].name}`);
+            this.loadLevel(this.currentLevelIndex);
+        } else {
+            this.victory();
+        }
+    },
+
+    gameOver() {
+        this.isRunning = false;
+        alert("💀 ¡GAME OVER! Te has quedado sin vidas.");
+        location.reload();
+    },
+
+    victory() {
+        this.isRunning = false;
+        alert("🏆 ¡VICTORIA! Has completado La Mazmorra del Tiempo.");
+        location.reload();
+    },
+
+    loop() {
+        if (!this.isRunning) return;
+        this.update();
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+    },
+
+    update() {
+        Player.update(this.currentLevel);
+    },
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.currentLevel && this.currentLevel.draw) {
+            this.currentLevel.draw(this.ctx);
+        }
+        Player.draw(this.ctx);
+    }
+};
+
+window.addEventListener('load', () => {
+    Game.init();
+});
