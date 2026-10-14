@@ -1,97 +1,107 @@
-// js/levels/level2.js - Nivel 2 (Dificultad Media: Trampas y Pinchos)
+// js/levels/level2.js
 
-class Level2 {
-    constructor() {
-        // Plataformas con huecos (vacío al fondo)
-        this.platforms = [
-            { x: 0, y: 450, width: 220, height: 50 },   // Inicio
-            { x: 280, y: 380, width: 130, height: 20 },  // Salto 1
-            { x: 460, y: 300, width: 120, height: 20 },  // Salto 2
-            { x: 630, y: 220, width: 170, height: 50 }   // Zona de Meta
-        ];
+const Level2 = {
 
-        // Trampas / Pinchos (x, y, ancho, alto)
-        this.traps = [
-            { x: 310, y: 360, width: 40, height: 20 },   // Pinchos sobre plataforma 2
-            { x: 490, y: 280, width: 30, height: 20 }    // Pinchos sobre plataforma 3
-        ];
+  name: "Nivel 2: Obstáculos y Trampas",
 
-        // Meta al final del nivel
-        this.goal = { x: 720, y: 160, width: 35, height: 60 };
-        
-        // Punto de reaparición inicial
-        this.spawnPoint = { x: 30, y: 350 };
-    }
+  mapWidth: 800,
 
-    checkCollisions(player) {
-        // 1. Colisión con plataformas
-        let onAnyPlatform = false;
-        this.platforms.forEach(plat => {
-            if (
-                player.x < plat.x + plat.width &&
-                player.x + player.width > plat.x &&
-                player.y + player.height <= plat.y + 12 &&
-                player.y + player.height + player.vy >= plat.y
-            ) {
-                player.y = plat.y - player.height;
-                player.vy = 0;
-                player.isGrounded = true;
-                onAnyPlatform = true;
-            }
-        });
+  mapHeight: 450,
 
-        // 2. Colisión con Trampas / Pinchos -> Quita Vida y Respawn
-        this.traps.forEach(trap => {
-            if (
-                player.x < trap.x + trap.width &&
-                player.x + player.width > trap.x &&
-                player.y < trap.y + trap.height &&
-                player.y + player.height > trap.y
-            ) {
-                this.respawnPlayer(player);
-            }
-        });
+  
 
-        // 3. Caída al vacío (Caer fuera del canvas) -> Quita Vida y Respawn
-        if (player.y > 500) {
-            this.respawnPlayer(player);
-        }
+  // Punto de aparición cómodo al inicio del nivel
 
-        // 4. Llegada a la Meta -> Pasa al Nivel 3
-        if (
-            player.x < this.goal.x + this.goal.width &&
-            player.x + player.width > this.goal.x &&
-            player.y < this.goal.y + this.goal.height &&
-            player.y + player.height > this.goal.y
-        ) {
-            console.log("¡Nivel 2 Completado!");
-            game.nextLevel();
-        }
-    }
+  spawnPoint: { x: 40, y: 370 },
 
-    respawnPlayer(player) {
-        game.loseLife();
-        player.x = this.spawnPoint.x;
-        player.y = this.spawnPoint.y;
-        player.vx = 0;
-        player.vy = 0;
-    }
+  
 
-    draw(ctx) {
-        // Dibujar plataformas (Azul Mazmorra)
-        ctx.fillStyle = "#34495e";
-        this.platforms.forEach(plat => {
-            ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        });
+  // Meta / Salida accesible en una plataforma superior derecha
 
-        // Dibujar Pinchos / Trampas (Rojo Peligro)
-        ctx.fillStyle = "#e74c3c";
-        this.traps.forEach(trap => {
-            ctx.fillRect(trap.x, trap.y, trap.width, trap.height);
-        });
+  exitPoint: { x: 730, y: 50, width: 40, height: 55 },
 
-        // Dibujar la Meta (Dorado)
-        ctx.fillStyle = "#f1c40f";
-        ctx.fillRect(this.goal.x, this.goal.y, this.goal.width, this.goal.height);
-    }
-}
+
+
+  // Plataformas diseñadas con un flujo claro de salto en escalera
+
+  platforms: [
+
+    // Suelo principal
+
+    { x: 0, y: 420, width: 800, height: 30, color: '#4a3b5c' },
+
+    
+
+    // Bordes de la mazmorra
+
+    { x: 0, y: 0, width: 20, height: 450, color: '#4a3b5c' },   // Izquierda
+
+    { x: 780, y: 0, width: 20, height: 450, color: '#4a3b5c' },  // Derecha
+
+    { x: 0, y: 0, width: 800, height: 20, color: '#4a3b5c' },   // Techo
+
+
+
+    // Escalones y plataformas intermedias bien espaciadas para saltar con comodidad
+
+    { x: 100, y: 320, width: 250, height: 16, color: '#6c5ce7' },
+
+    { x: 420, y: 250, width: 260, height: 16, color: '#6c5ce7' },
+
+    { x: 150, y: 170, width: 240, height: 16, color: '#6c5ce7' },
+
+    { x: 480, y: 110, width: 280, height: 16, color: '#6c5ce7' }
+
+  ],
+
+
+
+  // Trampas estratégicas que dejan suficiente espacio en los bordes para pasar caminando o saltando
+
+  hazards: [
+
+    { x: 220, y: 304, width: 35, height: 16, type: 'spikes', color: '#e74c3c' },
+
+    { x: 530, y: 234, width: 35, height: 16, type: 'spikes', color: '#e74c3c' },
+
+    { x: 250, y: 154, width: 35, height: 16, type: 'spikes', color: '#e74c3c' }
+
+  ],
+
+
+
+  draw(ctx) {
+
+    // Dibujar Salida / Portal
+
+    ctx.fillStyle = '#2ecc71';
+
+    ctx.fillRect(this.exitPoint.x, this.exitPoint.y, this.exitPoint.width, this.exitPoint.height);
+
+
+
+    // Dibujar Plataformas
+
+    this.platforms.forEach(p => {
+
+      ctx.fillStyle = p.color;
+
+      ctx.fillRect(p.x, p.y, p.width, p.height);
+
+    });
+
+
+
+    // Dibujar Trampas
+
+    this.hazards.forEach(h => {
+
+      ctx.fillStyle = h.color;
+
+      ctx.fillRect(h.x, h.y, h.width, h.height);
+
+    });
+
+  }
+
+};
