@@ -16,14 +16,28 @@
     </div>
 
     <!-- CARGA MODULAR DE SCRIPTS -->
+     <!-- SCRIPTS MODULARES -->
     <script src="js/core/game.js"></script>
     <script src="js/entities/player.js"></script>
+    <script src="js/levels/level1.js"></script>
+    <script src="js/levels/level2.js"></script>
+    <script src="js/levels/level3.js"></script>
+
+    <script src="js/core/game.js"></script>
+    <script src="js/entities/player.js"></script>
+    
     <script>
-        // Bucle temporal de prueba del Core Developer
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const player = new Player(100, 300);
+        const player = new Player(50, 300);
         const keys = {};
+
+        // Instanciar niveles de respaldo
+        const levels = {
+            1: new Level1(),
+            2: new Level2(),
+            3: new Level3()
+        };
 
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
@@ -31,19 +45,24 @@
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Actualizar HUD en pantalla
+            // Actualizar HUD
             document.getElementById("lives-val").innerText = game.lives;
             document.getElementById("score-val").innerText = game.score;
             document.getElementById("level-val").innerText = game.currentLevel;
 
-            // Lógica del jugador
+            // Obtener nivel actual
+            const currentMap = levels[game.currentLevel];
+            currentMap.draw(ctx);
+
+            // Lógica del jugador con plataformas del nivel
             player.handleInput(keys);
-            player.update();
+            player.update(currentMap.platforms);
             player.draw(ctx);
 
             requestAnimationFrame(gameLoop);
         }
         gameLoop();
     </script>
+    
 </body>
 </html>
